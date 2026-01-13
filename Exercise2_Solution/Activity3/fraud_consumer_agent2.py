@@ -2,6 +2,7 @@
 import json
 from collections import deque
 import time
+from kafka import KafkaConsumer
 # Simulated In-Memory State for Velocity Checks.
 user_history = {} 
 
@@ -33,6 +34,16 @@ def analyze_fraud(transaction):
     return score
 
 print("Agent started. Listening for CDC events...")
+
+consumer = KafkaConsumer(
+    "frauddb.public.transactions",
+    bootstrap_servers="localhost:9092",
+    auto_offset_reset="latest",
+    enable_auto_commit=True,
+    group_id="fraud-agent-2",
+    value_deserializer=lambda x: json.loads(x.decode("utf-8"))
+)
+
 for message in consumer:  #consumer has to be implemented before!
     # Debezium wraps data in an 'after' block
     payload = message.value.get('payload', {})
